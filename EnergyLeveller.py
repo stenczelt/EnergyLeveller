@@ -7,13 +7,13 @@ Energy Leveller version 2.0  (2019)
 This code is shared under the MIT license Copyright 2019 James Furness.
 You are free to use, modify and distribute the code, though recognition of my effort is appreciated!
 """
-from __future__ import print_function
-import sys
 import os.path
+import sys
+
 import matplotlib
+import matplotlib.pyplot as plt
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 
 
 class Diagram:
@@ -90,7 +90,7 @@ class Diagram:
             state = self.statesList[key]
             y_point = state.leftPointy + state.labelOffset[1] + offset
             if self.sorted_y_lims is None or (
-                y_point >= self.sorted_y_lims[0] and y_point <= self.sorted_y_lims[1]
+                self.sorted_y_lims[0] <= y_point <= self.sorted_y_lims[1]
             ):
                 self.ax.annotate(
                     state.label,
@@ -103,13 +103,10 @@ class Diagram:
             y_point = state.leftPointy + state.textOffset[1] - offset
             if state.show_energy and (
                 self.sorted_y_lims is None
-                or (
-                    y_point >= self.sorted_y_lims[0]
-                    and y_point <= self.sorted_y_lims[1]
-                )
+                or (self.sorted_y_lims[0] <= y_point <= self.sorted_y_lims[1])
             ):
                 self.ax.annotate(
-                    "  " + str(state.energy),
+                    f"  {state.energy:6.3f}",
                     (state.leftPointx + state.textOffset[0], y_point),
                     color=state.labelColor,
                     verticalalignment="top",
