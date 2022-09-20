@@ -87,7 +87,7 @@ class Diagram:
         offset = self.ax.get_ylim()
         offset = offset[1] * 0.01
         for key in self.statesList.keys():
-            state = self.statesList[key]
+            state: State = self.statesList[key]
             y_point = state.leftPointy + state.labelOffset[1] + offset
             if self.sorted_y_lims is None or (
                 self.sorted_y_lims[0] <= y_point <= self.sorted_y_lims[1]
@@ -201,7 +201,8 @@ class State:
         self.linksTo = ""
         self.label = ""
         self.legend = None
-        self.energy = 0.0
+        self._energy = 0.0
+        self.energy_shift = 0.0
         self.normalisedPosition = 0.0
         self.column = 1
         self.leftPointx = 0
@@ -214,6 +215,14 @@ class State:
         self.imageScale = 1.0
         self.image = None
         self.show_energy = True
+
+    @property
+    def energy(self):
+        return self._energy + self.energy_shift
+
+    @energy.setter
+    def energy(self, value):
+        self._energy = value
 
 
 ######################################################################################################
@@ -232,6 +241,7 @@ def ReadInput(filename):
     statesList = []
     width = 0
     height = 0
+    global_shift = 0.0
     fontSize = 8
     energyUnits = ""
     y_lims = None
@@ -294,6 +304,16 @@ def ReadInput(filename):
                     elif raw[0] == "ENERGY":
                         try:
                             statesList[-1].energy = float(raw[-1])
+                        except ValueError:
+                            print(
+                                "ERROR: Could not read real number for energy on line "
+                                + str(lc)
+                                + ":\n\t"
+                                + line
+                            )
+                    elif raw[0] == "ENERGY SHIFT":
+                        try:
+                            statesList[-1].energy_shift = float(raw[-1])
                         except ValueError:
                             print(
                                 "ERROR: Could not read real number for energy on line "
@@ -389,7 +409,9 @@ def ReadInput(filename):
                 else:
                     raw[0] = raw[0].upper().strip()
                     raw[1] = raw[1].strip().lstrip()
-                    if raw[0] == "WIDTH":
+                    if raw[0] == "GLOBAL-SHIFT":
+                        global_shift = float(raw[1])
+                    elif raw[0] == "WIDTH":
                         try:
                             width = int(raw[1])
                         except ValueError:
@@ -477,6 +499,7 @@ def ReadInput(filename):
     outDiagram.energyUnits = energyUnits
     maxColumn = 0
     for state in statesList:
+        state._energy -= global_shift
         outDiagram.AddState(state)
         if state.column > maxColumn:
             maxColumn = state.column
